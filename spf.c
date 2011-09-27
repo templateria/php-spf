@@ -23,6 +23,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+#include "zend_exceptions.h"
 #include "php_spf.h"
 #include "netinet/in.h"
 #include "spf2/spf.h"
@@ -216,15 +217,15 @@ PHP_METHOD(Spf, query)
     spf_request = SPF_request_new(spf_server);
 
     if (SPF_request_set_ipv4_str(spf_request, ip)) {
-        zend_throw_exception(spf_ce_SpfException, "invalid ip address");
+        zend_throw_exception(spf_ce_SpfException, "invalid ip address", 0 TSRMLS_CC);
     }
 
     if (SPF_request_set_helo_dom(spf_request, helo)) {
-        zend_throw_exception(spf_ce_SpfException, "invalid HELO domain");
+        zend_throw_exception(spf_ce_SpfException, "invalid HELO domain", 0 TSRMLS_CC);
     }
 
     if (SPF_request_set_env_from(spf_request, sender)) {
-        zend_throw_exception(spf_ce_SpfException, "invalid envelope from");
+        zend_throw_exception(spf_ce_SpfException, "invalid envelope from", 0 TSRMLS_CC);
     }
 
     SPF_request_query_mailfrom(spf_request, &spf_response);
