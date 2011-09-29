@@ -52,6 +52,27 @@ ZEND_END_ARG_INFO();
 
 ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getReceivedSpf, 0)
 ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getReceivedSpfValue, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getExplanation, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getSmtpComment, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_hasErrors, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_hasWarnings, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getErrors, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getWarnings, 0)
+ZEND_END_ARG_INFO();
 /* }}} */
 
 /* True global resources - no need for thread safety here */
@@ -70,6 +91,13 @@ const zend_function_entry spf_response_methods[] = {
 	PHP_ME(SpfResponse, getResult, arginfo_SpfResponse_getResult, ZEND_ACC_PUBLIC)
 	PHP_ME(SpfResponse, getHeaderComment, arginfo_SpfResponse_getResult, ZEND_ACC_PUBLIC)
 	PHP_ME(SpfResponse, getReceivedSpf, arginfo_SpfResponse_getReceivedSpf, ZEND_ACC_PUBLIC)
+	PHP_ME(SpfResponse, getReceivedSpfValue, arginfo_SpfResponse_getReceivedSpfValue, ZEND_ACC_PUBLIC)
+	PHP_ME(SpfResponse, getExplanation, arginfo_SpfResponse_getExplanation, ZEND_ACC_PUBLIC)
+	PHP_ME(SpfResponse, getSmtpComment, arginfo_SpfResponse_getSmtpComment, ZEND_ACC_PUBLIC)
+    PHP_ME(SpfResponse, hasErrors, arginfo_SpfResponse_hasErrors, ZEND_ACC_PUBLIC)
+    PHP_ME(SpfResponse, getErrors, arginfo_SpfResponse_hasErrors, ZEND_ACC_PUBLIC)
+    PHP_ME(SpfResponse, hasWarnings, arginfo_SpfResponse_hasWarnings, ZEND_ACC_PUBLIC)
+    PHP_ME(SpfResponse, getWarnings, arginfo_SpfResponse_hasWarnings, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}	
 };
 
@@ -339,6 +367,100 @@ PHP_METHOD(SpfResponse, getReceivedSpf)
 	SPF_RESPONSE_FROM_OBJECT(response, getThis());
 
 	RETURN_STRING(SPF_response_get_received_spf(response), 1);
+}
+
+PHP_METHOD(SpfResponse, getReceivedSpfValue)
+{
+    SPF_response_t *response;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    RETURN_STRING(SPF_response_get_received_spf_value(response), 1);
+}
+
+PHP_METHOD(SpfResponse, getExplanation)
+{
+    SPF_response_t *response;
+    const char *explanation;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    explanation = SPF_response_get_explanation(response);
+    if (explanation == NULL) {
+        RETURN_NULL();
+    }
+
+    RETURN_STRING(explanation, 1);
+}
+
+PHP_METHOD(SpfResponse, getSmtpComment)
+{
+    SPF_response_t *response;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    RETURN_STRING(SPF_response_get_smtp_comment(response), 1);
+}
+
+PHP_METHOD(SpfResponse, hasErrors)
+{
+    SPF_response_t *response;
+    int errors;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    errors = SPF_response_errors(response);
+
+    if (errors) {
+        RETURN_TRUE;
+    }
+
+    RETURN_FALSE;
+}
+
+PHP_METHOD(SpfResponse, hasWarnings)
+{
+    SPF_response_t *response;
+    int warnings;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    warnings = SPF_response_warnings(response);
+
+    if (warnings) {
+        RETURN_TRUE;
+    }
+
+    RETURN_FALSE;
+}
+
+
+PHP_METHOD(SpfResponse, getErrors)
+{
+}
+
+PHP_METHOD(SpfResponse, getWarnings)
+{
 }
 
 /*

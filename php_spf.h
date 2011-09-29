@@ -70,6 +70,13 @@ PHP_METHOD(Spf, query);
 PHP_METHOD(SpfResponse, getResult);
 PHP_METHOD(SpfResponse, getHeaderComment);
 PHP_METHOD(SpfResponse, getReceivedSpf);
+PHP_METHOD(SpfResponse, getExplanation);
+PHP_METHOD(SpfResponse, getSmtpComment);
+PHP_METHOD(SpfResponse, getReceivedSpfValue);
+PHP_METHOD(SpfResponse, hasErrors);
+PHP_METHOD(SpfResponse, hasWarnings);
+PHP_METHOD(SpfResponse, getErrors);
+PHP_METHOD(SpfResponse, getWarnings);
 
 #ifdef ZTS
 #define SPF_G(v) TSRMG(spf_globals_id, zend_spf_globals *, v)
