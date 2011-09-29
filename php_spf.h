@@ -39,11 +39,21 @@ extern zend_module_entry spf_module_entry;
 #endif
 
 extern zend_class_entry* spf_ce_Spf;
+extern zend_class_entry* spf_ce_SpfResponse;
+extern zend_class_entry* spf_ce_SpfException;
 
 typedef struct _spf_object {
 	zend_object std;
 	SPF_server_t *spf_server;
 } php_spf_object;
+
+typedef struct _spf_response_object {
+	zend_object std;
+	SPF_response_t *spf_response;
+} php_spf_response_object;
+
+zend_object_value create_spf_response(zend_class_entry *class_type TSRMLS_DC);
+void free_spf_response(void *object TSRMLS_DC);
 
 zend_object_value create_spf(zend_class_entry *class_type TSRMLS_DC);
 void free_spf(void *object TSRMLS_DC);
@@ -56,6 +66,10 @@ PHP_MINFO_FUNCTION(spf);
 
 PHP_METHOD(Spf, __construct);
 PHP_METHOD(Spf, query);
+
+PHP_METHOD(SpfResponse, getResult);
+PHP_METHOD(SpfResponse, getHeaderComment);
+PHP_METHOD(SpfResponse, getReceivedSpf);
 
 #ifdef ZTS
 #define SPF_G(v) TSRMG(spf_globals_id, zend_spf_globals *, v)

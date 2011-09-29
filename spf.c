@@ -30,6 +30,7 @@
 #include "spf2/spf_lib_version.h"
 
 zend_class_entry *spf_ce_Spf;
+zend_class_entry *spf_ce_SpfResponse;
 zend_class_entry *spf_ce_SpfException;
 
 /* {{{ ZEND_BEGIN_ARG_INFO */
@@ -42,12 +43,21 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_Spf_query, 0, 0, 0)
     ZEND_ARG_INFO(0, helo)
     ZEND_ARG_INFO(0, sender)
 ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getResult, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getHeaderComment, 0)
+ZEND_END_ARG_INFO();
+
+ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getReceivedSpf, 0)
+ZEND_END_ARG_INFO();
 /* }}} */
 
 /* True global resources - no need for thread safety here */
 static int le_spf;
 
-/* {{{ spf_functions[]
+/* {{{ spf_methods[]
  */
 const zend_function_entry spf_methods[] = {
 	PHP_ME(Spf, __construct, arginfo_Spf___construct, ZEND_ACC_PUBLIC)
@@ -56,6 +66,13 @@ const zend_function_entry spf_methods[] = {
 };
 /* }}} */
 
+const zend_function_entry spf_response_methods[] = {
+	PHP_ME(SpfResponse, getResult, arginfo_SpfResponse_getResult, ZEND_ACC_PUBLIC)
+	PHP_ME(SpfResponse, getHeaderComment, arginfo_SpfResponse_getResult, ZEND_ACC_PUBLIC)
+	PHP_ME(SpfResponse, getReceivedSpf, arginfo_SpfResponse_getReceivedSpf, ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}	
+};
+
 /* {{{ spf_module_entry
  */
 zend_module_entry spf_module_entry = {
@@ -63,7 +80,7 @@ zend_module_entry spf_module_entry = {
 	STANDARD_MODULE_HEADER,
 #endif
 	"spf",
-	spf_methods,
+	NULL,
 	PHP_MINIT(spf),
 	PHP_MSHUTDOWN(spf),
 	PHP_RINIT(spf),
@@ -84,11 +101,15 @@ ZEND_GET_MODULE(spf)
  */
 PHP_MINIT_FUNCTION(spf)
 {
-    zend_class_entry ce, ce_exception;
+    zend_class_entry ce, ce_response, ce_exception;
 
     INIT_CLASS_ENTRY(ce, "Spf", spf_methods);
 	ce.create_object = create_spf;
     spf_ce_Spf = zend_register_internal_class(&ce TSRMLS_CC);
+
+	INIT_CLASS_ENTRY(ce_response, "SpfResponse", spf_response_methods);
+	ce_response.create_object = create_spf_response;
+	spf_ce_SpfResponse = zend_register_internal_class(&ce_response TSRMLS_CC);
 
 	INIT_CLASS_ENTRY(ce_exception, "SpfException", NULL);
 	spf_ce_SpfException = zend_register_internal_class_ex(&ce_exception, (zend_class_entry*) zend_exception_get_default(TSRMLS_C), NULL TSRMLS_CC);
@@ -146,6 +167,51 @@ PHP_MINFO_FUNCTION(spf)
 }
 /* }}} */
 
+/* {{{ SPF_RESPONSE_FROM_OBJECT */
+#define SPF_RESPONSE_FROM_OBJECT(intern, object) \
+{ \
+    php_spf_response_object *obj = (php_spf_response_object*) zend_object_store_get_object(object TSRMLS_CC); \
+    intern = obj->spf_response; \
+    if (!intern) { \
+        zend_throw_exception(spf_ce_SpfException, "Invalid or uninitialized SPF response", 0 TSRMLS_CC); \
+        RETURN_FALSE; \
+    } \
+}
+/* }}} */
+
+/* {{{ create SpfResponse */
+zend_object_value create_spf_response(zend_class_entry *class_type TSRMLS_DC)
+{
+	zend_object_value retval;
+	php_spf_response_object *intern;
+	zval *tmp;
+
+	intern = (php_spf_response_object*) emalloc(sizeof(php_spf_response_object));
+	memset(intern, 0, sizeof(php_spf_response_object));
+
+	zend_object_std_init(&intern->std, class_type TSRMLS_CC);
+	zend_hash_copy(intern->std.properties,
+		&class_type->default_properties,
+		(copy_ctor_func_t) zval_add_ref,
+		(void *) &tmp,
+		sizeof(zval*));
+	retval.handle = zend_objects_store_put(intern, (zend_objects_store_dtor_t) zend_objects_destroy_object, free_spf_response, NULL TSRMLS_CC);
+	retval.handlers = zend_get_std_object_handlers();
+
+	return retval;
+}
+/* }}} */
+
+void free_spf_response(void *object TSRMLS_DC)
+{
+	php_spf_response_object *intern = (php_spf_response_object*) object;
+
+	if (intern->spf_response) {
+		SPF_response_free(intern->spf_response);
+	}
+
+	efree(object);
+}
 
 /* {{{ create_spf */
 zend_object_value create_spf(zend_class_entry *class_type TSRMLS_DC)
@@ -203,12 +269,13 @@ PHP_METHOD(Spf, __construct)
 PHP_METHOD(Spf, query)
 {
     int ip_len, helo_len, sender_len, recipient_len;
-    char *ip, *helo, *sender, *recipient, *response;
+    char *ip, *helo, *sender, *recipient;
 	SPF_server_t *spf_server = NULL;
     SPF_request_t *spf_request = NULL;
     SPF_response_t *spf_response = NULL;
+	php_spf_response_object *response;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ssss", &ip, &ip_len, &helo, &helo_len, &sender, &sender_len, &recipient, &recipient_len)) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|s", &ip, &ip_len, &helo, &helo_len, &sender, &sender_len, &recipient, &recipient_len)) {
         RETURN_FALSE;
     }
 
@@ -230,7 +297,48 @@ PHP_METHOD(Spf, query)
 
     SPF_request_query_mailfrom(spf_request, &spf_response);
 
-    RETURN_STRING(SPF_response_get_received_spf(spf_response), 0);
+	object_init_ex(return_value, spf_ce_SpfResponse);
+	response = (php_spf_response_object*) zend_object_store_get_object(return_value TSRMLS_CC);
+	response->spf_response = spf_response;
+}
+
+PHP_METHOD(SpfResponse, getResult)
+{
+	SPF_response_t *response;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+	RETURN_STRING(SPF_strresult(SPF_response_result(response)), 1);
+}
+
+PHP_METHOD(SpfResponse, getHeaderComment)
+{
+	SPF_response_t *response;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+	SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+	RETURN_STRING(SPF_response_get_header_comment(response), 1);
+}
+
+PHP_METHOD(SpfResponse, getReceivedSpf)
+{
+	SPF_response_t *response;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+	RETURN_STRING(SPF_response_get_received_spf(response), 1);
 }
 
 /*
