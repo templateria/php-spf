@@ -372,6 +372,7 @@ PHP_METHOD(SpfResponse, getReceivedSpf)
 PHP_METHOD(SpfResponse, getReceivedSpfValue)
 {
     SPF_response_t *response;
+	const char *received_spf_value;
 
     if (zend_parse_parameters_none() == FAILURE) {
         RETURN_FALSE;
@@ -379,7 +380,12 @@ PHP_METHOD(SpfResponse, getReceivedSpfValue)
 
     SPF_RESPONSE_FROM_OBJECT(response, getThis());
 
-    RETURN_STRING(SPF_response_get_received_spf_value(response), 1);
+    received_spf_value = SPF_response_get_received_spf_value(response);
+	if (received_spf_value == NULL) {
+		RETURN_NULL();
+	}
+
+	RETURN_STRING(received_spf_value, 1);
 }
 
 PHP_METHOD(SpfResponse, getExplanation)
@@ -404,6 +410,7 @@ PHP_METHOD(SpfResponse, getExplanation)
 PHP_METHOD(SpfResponse, getSmtpComment)
 {
     SPF_response_t *response;
+	const char *smtp_comment;
 
     if (zend_parse_parameters_none() == FAILURE) {
         RETURN_FALSE;
@@ -411,7 +418,12 @@ PHP_METHOD(SpfResponse, getSmtpComment)
 
     SPF_RESPONSE_FROM_OBJECT(response, getThis());
 
-    RETURN_STRING(SPF_response_get_smtp_comment(response), 1);
+    smtp_comment = SPF_response_get_smtp_comment(response);
+	if (smtp_comment == NULL) {
+		RETURN_NULL();
+	}
+
+	RETURN_STRING(smtp_comment, 1);
 }
 
 PHP_METHOD(SpfResponse, hasErrors)
@@ -457,10 +469,46 @@ PHP_METHOD(SpfResponse, hasWarnings)
 
 PHP_METHOD(SpfResponse, getErrors)
 {
+	int i;
+	SPF_response_t *response;
+
+	if (zend_parse_parameters_none() == FAILURE) {
+		RETURN_FALSE;
+	}
+
+	array_init(return_value);
+
+	SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+	for (i = 0; i < SPF_response_messages(response); i++) {
+		SPF_error_t *err = SPF_response_message(response, i);
+		if (!SPF_error_errorp(err)) {
+			continue;
+		}
+		add_index_string(return_value, SPF_error_code(err), SPF_error_message(err), 1);
+	}
 }
 
 PHP_METHOD(SpfResponse, getWarnings)
 {
+    int i;
+    SPF_response_t *response;
+
+    if (zend_parse_parameters_none() == FAILURE) {
+        RETURN_FALSE;
+    }
+
+    array_init(return_value);
+
+    SPF_RESPONSE_FROM_OBJECT(response, getThis());
+
+    for (i = 0; i < SPF_response_messages(response); i++) {
+        SPF_error_t *err = SPF_response_message(response, i);
+        if (SPF_error_errorp(err)) {
+            continue;
+        }
+        add_index_string(return_value, SPF_error_code(err), SPF_error_message(err), 1);
+    }
 }
 
 /*
