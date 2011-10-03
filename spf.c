@@ -27,6 +27,7 @@
 #include "php_spf.h"
 #include "netinet/in.h"
 #include "spf2/spf.h"
+#include "spf2/spf_dns_zone.h"
 #include "spf2/spf_lib_version.h"
 
 zend_class_entry *spf_ce_Spf;
@@ -74,6 +75,10 @@ ZEND_END_ARG_INFO();
 ZEND_BEGIN_ARG_INFO(arginfo_SpfResponse_getWarnings, 0)
 ZEND_END_ARG_INFO();
 /* }}} */
+
+#define SPF_REGISTER_CLASS_CONSTANT_LONG(class, name, value) \
+	zend_declare_class_constant_long(spf_ce_ ## class, name, sizeof(name) - 1, (long) value TSRMLS_CC);
+
 
 /* True global resources - no need for thread safety here */
 static int le_spf;
@@ -138,6 +143,52 @@ PHP_MINIT_FUNCTION(spf)
 	INIT_CLASS_ENTRY(ce_response, "SpfResponse", spf_response_methods);
 	ce_response.create_object = create_spf_response;
 	spf_ce_SpfResponse = zend_register_internal_class(&ce_response TSRMLS_CC);
+
+	SPF_REGISTER_CLASS_CONSTANT_LONG(Spf, "TYPE_DNS_RESOLV", SPF_DNS_RESOLV);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(Spf, "TYPE_DNS_CACHE",  SPF_DNS_CACHE);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(Spf, "TYPE_DNS_ZONE",   SPF_DNS_ZONE);
+
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_INVALID",   SPF_RESULT_INVALID);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_NEUTRAL",   SPF_RESULT_NEUTRAL);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_PASS",      SPF_RESULT_PASS);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_FAIL",      SPF_RESULT_FAIL);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_SOFTFAIL",  SPF_RESULT_SOFTFAIL);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_NONE",      SPF_RESULT_NONE);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_TEMPERROR", SPF_RESULT_TEMPERROR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "RESULT_PERMERROR", SPF_RESULT_PERMERROR);
+
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_NO_MEMORY", SPF_E_NO_MEMORY);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_NOT_SPF", SPF_E_NOT_SPF);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_SYNTAX", SPF_E_SYNTAX);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_MOD_W_PREF", SPF_E_MOD_W_PREF);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_CHAR", SPF_E_INVALID_CHAR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_UNKNOWN_MECH", SPF_E_UNKNOWN_MECH);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_OPT", SPF_E_INVALID_OPT);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_CIDR", SPF_E_INVALID_CIDR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_MISSING_OPT", SPF_E_MISSING_OPT);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INTERNAL_ERROR", SPF_E_INTERNAL_ERROR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_ESC", SPF_E_INVALID_ESC);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_VAR", SPF_E_INVALID_VAR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BIG_SUBDOM", SPF_E_BIG_SUBDOM);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_DELIM", SPF_E_INVALID_DELIM);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BIG_STRING", SPF_E_BIG_STRING);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BIG_MECH", SPF_E_BIG_MECH);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BIG_MOD", SPF_E_BIG_MOD);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BIG_DNS", SPF_E_BIG_DNS);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_IP4", SPF_E_INVALID_IP4);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_IP6", SPF_E_INVALID_IP6);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INVALID_PREFIX", SPF_E_INVALID_PREFIX);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_RESULT_UNKNOWN", SPF_E_RESULT_UNKNOWN);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_UNINIT_VAR", SPF_E_UNINIT_VAR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_MOD_NOT_FOUND", SPF_E_MOD_NOT_FOUND);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_NOT_CONFIG", SPF_E_NOT_CONFIG);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_DNS_ERROR", SPF_E_DNS_ERROR);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BAD_HOST_IP", SPF_E_BAD_HOST_IP);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_BAD_HOST_TLD", SPF_E_BAD_HOST_TLD);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_MECH_AFTER_ALL", SPF_E_MECH_AFTER_ALL);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_INCLUDE_RETURNED_NONE", SPF_E_INCLUDE_RETURNED_NONE);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_RECURSIVE", SPF_E_RECURSIVE);
+	SPF_REGISTER_CLASS_CONSTANT_LONG(SpfResponse, "ERROR_MULTIPLE_RECORDS", SPF_E_MULTIPLE_RECORDS);
 
 	INIT_CLASS_ENTRY(ce_exception, "SpfException", NULL);
 	spf_ce_SpfException = zend_register_internal_class_ex(&ce_exception, (zend_class_entry*) zend_exception_get_default(TSRMLS_C), NULL TSRMLS_CC);
@@ -230,6 +281,7 @@ zend_object_value create_spf_response(zend_class_entry *class_type TSRMLS_DC)
 }
 /* }}} */
 
+/* {{{ free_spf_response */
 void free_spf_response(void *object TSRMLS_DC)
 {
 	php_spf_response_object *intern = (php_spf_response_object*) object;
@@ -240,6 +292,7 @@ void free_spf_response(void *object TSRMLS_DC)
 
 	efree(object);
 }
+/* }}} */
 
 /* {{{ create_spf */
 zend_object_value create_spf(zend_class_entry *class_type TSRMLS_DC)
@@ -281,14 +334,20 @@ void free_spf(void *object TSRMLS_DC)
 PHP_METHOD(Spf, __construct)
 {
 	int server_type = SPF_DNS_CACHE;
+	int domain_len, spf_len;
+	char *domain, *spf;
 	php_spf_object *obj;
 
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|l", &server_type) == FAILURE) {
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "|lss", &server_type, &domain, &domain_len, &spf, &spf_len) == FAILURE) {
 		RETURN_FALSE;
 	}
 
 	obj = (php_spf_object*) zend_object_store_get_object(getThis() TSRMLS_CC);
 	obj->spf_server = SPF_server_new(server_type, 0);
+
+	if (server_type == SPF_DNS_ZONE) {
+		SPF_dns_zone_add_str(obj->spf_server->resolver, domain, ns_t_txt, NETDB_SUCCESS, spf);
+	}
 
 	if (!obj->spf_server) zend_throw_exception(spf_ce_SpfException, "could not initialize spf resource", 0 TSRMLS_CC);
 }
@@ -303,7 +362,8 @@ PHP_METHOD(Spf, query)
     SPF_response_t *spf_response = NULL;
 	php_spf_response_object *response;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|s", &ip, &ip_len, &helo, &helo_len, &sender, &sender_len, &recipient, &recipient_len)) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|s", &ip, &ip_len,
+	&helo, &helo_len, &sender, &sender_len, &recipient, &recipient_len)) {
         RETURN_FALSE;
     }
 
