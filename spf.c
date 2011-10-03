@@ -346,7 +346,9 @@ PHP_METHOD(Spf, __construct)
 	obj->spf_server = SPF_server_new(server_type, 0);
 
 	if (server_type == SPF_DNS_ZONE) {
-		SPF_dns_zone_add_str(obj->spf_server->resolver, domain, ns_t_txt, NETDB_SUCCESS, spf);
+		if (SPF_dns_zone_add_str(obj->spf_server->resolver, domain, ns_t_txt, NETDB_SUCCESS, spf)) {
+			zend_throw_exception(spf_ce_SpfException, "Invalid SPF record", 0 TSRMLS_CC);
+		}
 	}
 
 	if (!obj->spf_server) zend_throw_exception(spf_ce_SpfException, "could not initialize spf resource", 0 TSRMLS_CC);
