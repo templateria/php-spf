@@ -1,6 +1,6 @@
-PHP bindings for libspf2 (http://libspf2.org)
+# PHP bindings for libspf2 (http://libspf2.org)
 
-* Install
+## Install
 
 Make sure you install libspf2 development package first.
 
@@ -12,23 +12,22 @@ Make sure you install libspf2 development package first.
 	$ sudo make install
 	$ echo "extension=spf.so" > /etc/php5/conf.d/spf.ini
 
-* API
+##  API
 
-** Spf
+### Spf
 
-	void Spf::__construct([int $type[, string $domain[, string $spf]]])
+	void        Spf::__construct([int $type[, string $domain[, string $spf]]])
 	SpfResponse Spf::query(string $ip, string $helo, string $sender[, string $recipient])
 
-** SpfResponse
+### SpfResponse
 
-	string SpfResponse::getResult()
-	string SpfResponse::getHeaderComment();
-	string SpfResponse::getReceivedSpf();
-	string SpfResponse::getReceivedSpf();
-	string SpfResponse::getExplanation();
-	string SpfResponse::getSmtpComment();
+	string  SpfResponse::getResult();
+	string  SpfResponse::getHeaderComment();
+	string  SpfResponse::getReceivedSpf();
+	string  SpfResponse::getReceivedSpfValue();
+	string  SpfResponse::getExplanation();
+	string  SpfResponse::getSmtpComment();
 	boolean SpfResponse::hasErrors();
 	boolean SpfResponse::hasWarnings();
-	boolean SpfResponse::getErrors();
-	boolean SpfResponse::getWarnings();
-
+	array   SpfResponse::getErrors();
+	array   SpfResponse::getWarnings();
