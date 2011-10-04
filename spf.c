@@ -79,7 +79,6 @@ ZEND_END_ARG_INFO();
 #define SPF_REGISTER_CLASS_CONSTANT_LONG(class, name, value) \
 	zend_declare_class_constant_long(spf_ce_ ## class, name, sizeof(name) - 1, (long) value TSRMLS_CC);
 
-
 /* True global resources - no need for thread safety here */
 static int le_spf;
 
@@ -331,6 +330,7 @@ void free_spf(void *object TSRMLS_DC)
 }
 /* }}} */
 
+/* {{{ proto void Spf::__construct([int $type[, string $domain[, string $spf]]]) */
 PHP_METHOD(Spf, __construct)
 {
 	int server_type = SPF_DNS_CACHE;
@@ -353,8 +353,9 @@ PHP_METHOD(Spf, __construct)
 
 	if (!obj->spf_server) zend_throw_exception(spf_ce_SpfException, "could not initialize spf resource", 0 TSRMLS_CC);
 }
+/* }}} */
 
-
+/* {{{ proto SpfResponse Spf::query(string $ip, string $helo, string $sender[, string $recipient]) */
 PHP_METHOD(Spf, query)
 {
     int ip_len, helo_len, sender_len, recipient_len;
@@ -391,9 +392,12 @@ PHP_METHOD(Spf, query)
 	response = (php_spf_response_object*) zend_object_store_get_object(return_value TSRMLS_CC);
 	response->spf_response = spf_response;
 }
+/* }}} */
 
+/* {{{ proto string SpfResponse::getResult() */
 PHP_METHOD(SpfResponse, getResult)
 {
+	SPF_result_t result;
 	SPF_response_t *response;
 
 	if (zend_parse_parameters_none() == FAILURE) {
@@ -402,11 +406,17 @@ PHP_METHOD(SpfResponse, getResult)
 
 	SPF_RESPONSE_FROM_OBJECT(response, getThis());
 
-	RETURN_STRING(SPF_strresult(SPF_response_result(response)), 1);
-}
+	result = SPF_response_result(response);
 
+	RETURN_STRING(SPF_strresult(result), 1);
+}
+/* }}} */
+
+/* {{{ proto string SpfResponse::getHeaderComment();
+       Returns a string containing additional comments to be added to Received-SPF header. */
 PHP_METHOD(SpfResponse, getHeaderComment)
 {
+	const char *header_comment;
 	SPF_response_t *response;
 
     if (zend_parse_parameters_none() == FAILURE) {
@@ -415,22 +425,39 @@ PHP_METHOD(SpfResponse, getHeaderComment)
 
 	SPF_RESPONSE_FROM_OBJECT(response, getThis());
 
-	RETURN_STRING(SPF_response_get_header_comment(response), 1);
-}
+	header_comment = SPF_response_get_header_comment(response);
+	if (header_comment == NULL) {
+		RETURN_NULL();
+	}
 
+	RETURN_STRING(header_comment, 1);
+}
+/* }}} */
+
+/* {{{ proto string SpfResponse::getReceivedSpf();
+       Returns the complete Received-SPF header, including the field name. */
 PHP_METHOD(SpfResponse, getReceivedSpf)
 {
 	SPF_response_t *response;
+	const char *received_spf;
 
 	if (zend_parse_parameters_none() == FAILURE) {
 		RETURN_FALSE;
 	}
 
 	SPF_RESPONSE_FROM_OBJECT(response, getThis());
+	
+	received_spf = SPF_response_get_received_spf(response);
+	if (received_spf == NULL) {
+		RETURN_NULL();
+	}
 
-	RETURN_STRING(SPF_response_get_received_spf(response), 1);
+	RETURN_STRING(received_spf, 1);
 }
+/* }}} */
 
+/* {{{ proto string SpfResponse::getReceivedSpf();
+       Returns the value of the Received-SPF header. */
 PHP_METHOD(SpfResponse, getReceivedSpfValue)
 {
     SPF_response_t *response;
@@ -450,6 +477,8 @@ PHP_METHOD(SpfResponse, getReceivedSpfValue)
 	RETURN_STRING(received_spf_value, 1);
 }
 
+/* {{{ proto string SpfResponse::getExplanation();
+       Returns a string containing an explanation of the result. */
 PHP_METHOD(SpfResponse, getExplanation)
 {
     SPF_response_t *response;
@@ -469,6 +498,8 @@ PHP_METHOD(SpfResponse, getExplanation)
     RETURN_STRING(explanation, 1);
 }
 
+/* {{{ proto string SpfResponse::getSmtpComment();
+       Returns a string containing containing a link to OpenSPF's checker and the reason for the result. */
 PHP_METHOD(SpfResponse, getSmtpComment)
 {
     SPF_response_t *response;
@@ -488,6 +519,8 @@ PHP_METHOD(SpfResponse, getSmtpComment)
 	RETURN_STRING(smtp_comment, 1);
 }
 
+/* {{{ proto boolean SpfResponse::hasErrors();
+       Returns whether the SPF query has generated errors. */
 PHP_METHOD(SpfResponse, hasErrors)
 {
     SPF_response_t *response;
@@ -508,6 +541,8 @@ PHP_METHOD(SpfResponse, hasErrors)
     RETURN_FALSE;
 }
 
+/* {{{ proto boolean SpfResponse::hasWarnings();
+       Returns whether the SPF query has generated warnings. */
 PHP_METHOD(SpfResponse, hasWarnings)
 {
     SPF_response_t *response;
@@ -528,7 +563,8 @@ PHP_METHOD(SpfResponse, hasWarnings)
     RETURN_FALSE;
 }
 
-
+/* {{{ proto boolean SpfResponse::getErrors();
+       Returns an array of error messages indexed by error code. */
 PHP_METHOD(SpfResponse, getErrors)
 {
 	int i;
@@ -551,6 +587,8 @@ PHP_METHOD(SpfResponse, getErrors)
 	}
 }
 
+/* {{{ proto boolean SpfResponse::getWarnings();
+       Returns an array of warnings indexed by error code. */
 PHP_METHOD(SpfResponse, getWarnings)
 {
     int i;
