@@ -28,6 +28,7 @@
 #include "netinet/in.h"
 #include "spf2/spf.h"
 #include "spf2/spf_dns_zone.h"
+#include "spf2/spf_dns.h"
 #include "spf2/spf_lib_version.h"
 
 zend_class_entry *spf_ce_Spf;
@@ -268,11 +269,15 @@ zend_object_value create_spf_response(zend_class_entry *class_type TSRMLS_DC)
 	memset(intern, 0, sizeof(php_spf_response_object));
 
 	zend_object_std_init(&intern->std, class_type TSRMLS_CC);
+#if PHP_VERSION_ID < 50399
 	zend_hash_copy(intern->std.properties,
 		&class_type->default_properties,
 		(copy_ctor_func_t) zval_add_ref,
 		(void *) &tmp,
 		sizeof(zval*));
+#else
+       object_properties_init((zend_object*) &(intern->std.properties), class_type);
+#endif
 	retval.handle = zend_objects_store_put(intern, (zend_objects_store_dtor_t) zend_objects_destroy_object, free_spf_response, NULL TSRMLS_CC);
 	retval.handlers = zend_get_std_object_handlers();
 
@@ -304,11 +309,15 @@ zend_object_value create_spf(zend_class_entry *class_type TSRMLS_DC)
 	memset(intern, 0, sizeof(php_spf_object));
 
 	zend_object_std_init(&intern->std, class_type TSRMLS_CC);
+#if PHP_VERSION_ID < 50399
 	zend_hash_copy(intern->std.properties,
 		&class_type->default_properties,
 		(copy_ctor_func_t) zval_add_ref,
 		(void *) &tmp,
 		sizeof(zval*));
+#else
+       object_properties_init((zend_object*) &(intern->std.properties), class_type);
+#endif
 
 	retval.handle = zend_objects_store_put(intern, (zend_objects_store_dtor_t) zend_objects_destroy_object, free_spf, NULL TSRMLS_CC);
 	retval.handlers = zend_get_std_object_handlers();
@@ -346,7 +355,7 @@ PHP_METHOD(Spf, __construct)
 	obj->spf_server = SPF_server_new(server_type, 0);
 
 	if (server_type == SPF_DNS_ZONE) {
-		if (SPF_dns_zone_add_str(obj->spf_server->resolver, domain, ns_t_txt, NETDB_SUCCESS, spf)) {
+		if (SPF_dns_zone_add_str(obj->spf_server->resolver, domain, ns_t_txt, 0, spf)) {
 			zend_throw_exception(spf_ce_SpfException, "Invalid SPF record", 0 TSRMLS_CC);
 		}
 	}
