@@ -4,7 +4,7 @@
 
 Make sure you install libspf2 development package first.
 
-	$ git clone https://github.com/w3p/php-spf
+	$ git clone http://github.com/clone_url/php-spf.git
 	$ cd php-spf
 	$ phpize
 	$ ./configure
