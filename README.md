@@ -31,3 +31,13 @@ Make sure you install libspf2 development package first.
 	boolean SpfResponse::hasWarnings();
 	array   SpfResponse::getErrors();
 	array   SpfResponse::getWarnings();
+	
+### Example
+
+```php
+<?php
+$spf = new Spf();
+$response = $spf->query("216.239.32.2", "gmail.com", "pgpadron@gmail.com");
+var_dump($response->getResult());
+?>
+```
