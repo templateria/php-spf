@@ -1,4 +1,4 @@
-# PHP bindings for libspf2 (http://libspf2.org)
+# PHP bindings for libspf2 (http://www.libspf2.org)
 
 ## Install
 
