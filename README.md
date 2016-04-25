@@ -1,10 +1,10 @@
-# PHP bindings for libspf2 (http://libspf2.org)
+# PHP bindings for libspf2 (http://www.libspf2.org)
 
 ## Install
 
 Make sure you install libspf2 development package first.
 
-	$ git clone https://github.com/w3p/php-spf
+	$ git clone http://github.com/clone_url/php-spf.git
 	$ cd php-spf
 	$ phpize
 	$ ./configure
@@ -31,3 +31,13 @@ Make sure you install libspf2 development package first.
 	boolean SpfResponse::hasWarnings();
 	array   SpfResponse::getErrors();
 	array   SpfResponse::getWarnings();
+	
+### Example
+
+```php
+<?php
+$spf = new Spf();
+$response = $spf->query("216.239.32.2", "gmail.com", "pgpadron@gmail.com");
+var_dump($response->getResult());
+?>
+```
